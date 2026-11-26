@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
-from pathlib import Path
 
 from weregrettoinform.analyzer import Analyzer
 from weregrettoinform.generator import Generator, TextSegment
@@ -35,17 +34,3 @@ def render_variants(
         label: generator.render_html(transform(context))
         for label, transform in TRANSFORMATIONS.items()
     }
-
-
-def write_variants(
-    rendered: dict[str, str],
-    output_dir: Path,
-) -> dict[str, Path]:
-    paths = {}
-
-    for label, html in rendered.items():
-        path = output_dir / f"email-{label}-negative.html"
-        path.write_text(html, encoding="utf-8")
-        paths[label] = path
-
-    return paths

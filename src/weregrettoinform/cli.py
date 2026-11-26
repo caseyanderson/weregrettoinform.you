@@ -96,6 +96,7 @@ def main() -> None:
             args.transform,
             entry["format"],
             entry["output_file"],
+            f"html={entry['html_file']}",
         )
 
     for entry in result.skipped:
@@ -104,6 +105,7 @@ def main() -> None:
             args.transform,
             entry["format"],
             entry["existing_output_file"],
+            f"html={entry['html_file']}",
         )
 
 
