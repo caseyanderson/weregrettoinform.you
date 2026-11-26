@@ -43,3 +43,7 @@ Render one email:
 uv run weregrettoinform --email <filename> --transform blocked
 uv run weregrettoinform --email <filename> --transform whitespace
 ```
+
+## example
+
+![Blocked rejection email, post format](assets/email-blocked-post-example.png)
