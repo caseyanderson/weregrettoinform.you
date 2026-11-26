@@ -221,3 +221,15 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project data and generated output
+data/raw/
+data/processed/
+output/
+
+# Local prototyping artifacts
+prototyping/
+
+# Browser profiles and credentials
+browser-profile/
+.browser-profile/

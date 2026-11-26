@@ -1,0 +1,26 @@
+{% macro render_segments(segments) -%}
+{%- for segment in segments -%}
+{%- if segment.token is not none -%}
+<span class="token {{ segment.token.part_of_speech_group }} {{ segment.css_class }}">{{ segment.text }}</span>
+{%- else -%}
+<span class="{{ segment.css_class }}">{{ segment.text }}</span>
+{%- endif -%}
+{%- endfor -%}
+{%- endmacro -%}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Rejection</title>
+    <style>
+{{ stylesheet | safe }}
+</style>
+</head>
+<body>
+    <main>
+        <section class="email-body">{{ render_segments(segments) }}</section>
+    </main>
+</body>
+</html>

@@ -1,0 +1,27 @@
+[project]
+name = "weregrettoinform"
+version = "0.1.0"
+description = "Creatively managing rejection through computationally driven conceptual writing practices"
+requires-python = ">=3.13"
+dependencies = [
+    "beautifulsoup4>=4.15.0",
+    "jinja2>=3.1.6",
+    "nltk>=3.10.4",
+    "pillow>=13.0.0",
+    "playwright>=1.65.2",
+]
+
+[project.scripts]
+weregrettoinform = "weregrettoinform.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.12.10,<0.13"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.40.2",
+    "ipykernel>=7.4.0",
+    "jupyterlab>=4.6.6",
+    "ruff>=0.16.6",
+]
