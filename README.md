@@ -4,11 +4,13 @@ Creatively processing rejection through computationally driven conceptual writin
 
 ## overview
 
-Rejection is a normal part of life, particularly for artists. While most applications (for a fellowship, grant, job, etc.) are met with a denial, it is exhausting to receive a constant stream of "no's" for a sustained period of time.
+Rejection is a normal part of life, particularly for artists. While most applications (for a fellowship, grant, job, etc.) are met with a denial, it is exhausting to receive a constant stream of "no's."
 
-After a particularly active Fall submitting as many applications as possible, and a torrent of rejections, I began to search for a creative outlet to process this experience. At the same time, I couldn't help but notice a recurring pattern in these often polite, but ultimately impersonal, denial emails I was receiving. How many of them were even written by an actual person? Why am I spending so much time reading them? This is clearly a job for a computer.
+I've spent a lot of time this fall submitting applications. The torrent of rejections that followed made me look for a creative outlet to process this experience. At the same time, I couldn't help but notice a recurring pattern in these often polite, but ultimately impersonal, denial emails I was receiving. How many of them were even written by an actual person? Why am I spending so much time reading them? This is clearly a job for a computer.
 
-Over the last decade I have been teaching myself Natural Language Processing (primarily via the Python project [NLTK](https://www.nltk.org/)) in order to work with language as a structurally significant material in my instruction-based performance work (my training is in music composition so I use the term "scores" here). This exploration has resulted in a growing body of tools for a series of operas and produces striking images/arrangements of text inspired by conceptual writing practices. weregrettoinform.you is an opportunity to channel the energy of "no's" into something creative that simultaneously supports prototyping new methods for processing / transforming language.
+Over the last decade I have been teaching myself natural language processing (primarily via the Python project NLTK) in order to work with language as a structurally significant material in my instruction-based performance work (my training is in music composition so I use the term "scores" here). This exploration has led to a growing body of tools for a series of operas as well as images and arrangements of text inspired by conceptual writing practices. weregrettoinform.you is an opportunity to channel the energy of "no's" into something creative that simultaneously supports prototyping new methods for processing / transforming language.
+
+The software keeps the shape of the original email and leaves words it identifies as negative visible. The rest of the body text disappears or is covered with black boxes.
 
 ## pipeline
 
