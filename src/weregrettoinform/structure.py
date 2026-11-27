@@ -20,6 +20,7 @@ SIGNOFF_WORDS = (
     "warmly",
     "cheers",
     "yours truly",
+    "with all good wishes",
 )
 
 
@@ -88,18 +89,30 @@ def extract_message_body(html: str) -> str:
 
     body_tag = soup.body
     if body_tag is None:
-        return soup.get_text(" ", strip=True)
+        candidates = [
+            child
+            for child in soup.find_all(recursive=False)
+            if getattr(child, "get_text", None)
+        ]
 
-    children = body_tag.find_all(recursive=False)
-    if not children:
-        return soup.get_text(" ", strip=True)
+        if not candidates:
+            return soup.get_text(" ", strip=True)
 
-    outer = max(
-        children,
-        key=lambda child: len(child.get_text(" ", strip=True)),
-    )
+        outer = max(
+            candidates,
+            key=lambda child: len(child.get_text(" ", strip=True)),
+        )
+        parts = [paragraph_text(outer)]
+    else:
+        children = body_tag.find_all(recursive=False)
+        if not children:
+            return soup.get_text(" ", strip=True)
 
-    parts = [paragraph_text(child) for child in outer.find_all(recursive=False)]
+        outer = max(
+            children,
+            key=lambda child: len(child.get_text(" ", strip=True)),
+        )
+        parts = [paragraph_text(child) for child in outer.find_all(recursive=False)]
 
     for part in parts:
         if starts_with_greeting(part):
