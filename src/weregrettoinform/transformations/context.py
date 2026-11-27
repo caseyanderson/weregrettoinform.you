@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
@@ -20,6 +20,10 @@ class TransformContext:
     salutation: str
     name_forms: frozenset[str]
     negative_starts: frozenset[int]
+    text: str = ""
+    analyzed: list[list[AnalyzedToken]] = field(default_factory=list)
+    record: dict[str, str] = field(default_factory=dict)
+    both_proportion: int = 50
 
 
 def find_salutation(text: str) -> str:
@@ -59,6 +63,8 @@ def build_context(
     analyzed_sentences: list[list[AnalyzedToken]],
     segments: list[TextSegment],
     name_forms: Iterable[str],
+    record: dict[str, str] | None = None,
+    both_proportion: int = 50,
 ) -> TransformContext:
     return TransformContext(
         segments=segments,
@@ -66,4 +72,8 @@ def build_context(
         salutation=find_salutation(text),
         name_forms=frozenset(name_forms),
         negative_starts=negative_token_starts(analyzed_sentences),
+        text=text,
+        analyzed=analyzed_sentences,
+        record=dict(record) if record is not None else {},
+        both_proportion=both_proportion,
     )
