@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
+import webbrowser
+from datetime import datetime
 from pathlib import Path
 
 from weregrettoinform.email import load_eml_files
 from weregrettoinform.identity import load_name_forms
 from weregrettoinform.image import export_images
-from weregrettoinform.pipeline import render_variants
+from weregrettoinform.pipeline import render_variant
 
 
 def find_repo_root(start: Path) -> Path:
@@ -40,9 +43,37 @@ def select_record(records: list[dict], query: str) -> dict:
     return matches[0]
 
 
+def write_candidate_html(html: str, output_dir: Path) -> Path:
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    stamp = datetime.now().strftime("%Y%m%dT%H%M%S%f")
+    digest = hashlib.sha256(html.encode()).hexdigest()[:8]
+    path = output_dir / f"email-both-candidate-{stamp}-{digest}.html"
+
+    path.write_text(html, encoding="utf-8", newline="\n")
+    return path
+
+
+def approve_both_render(html: str, candidate_dir: Path) -> bool:
+    candidate_path = write_candidate_html(html, candidate_dir)
+
+    print(f"candidate HTML: {candidate_path}")
+    webbrowser.open(candidate_path.resolve().as_uri())
+
+    while True:
+        answer = input("Approve this render? (y/n): ").strip().casefold()
+
+        if answer in {"y", "yes"}:
+            return True
+        if answer in {"n", "no"}:
+            return False
+
+        print("Please answer y or n.")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Render one rejection email as blocked or whitespace art.",
+        description="Render one rejection email as blocked, whitespace, or both art.",
     )
     parser.add_argument(
         "--email",
@@ -50,8 +81,16 @@ def main() -> None:
     )
     parser.add_argument(
         "--transform",
-        choices=("blocked", "whitespace"),
+        choices=("blocked", "whitespace", "both"),
         help="Transformation to render",
+    )
+    parser.add_argument(
+        "--both-proportion",
+        type=int,
+        help=(
+            "Percent of body runs blocked when --transform both is used "
+            "(0-100, default: 50)"
+        ),
     )
     parser.add_argument(
         "--list",
@@ -74,12 +113,41 @@ def main() -> None:
     if not args.transform:
         parser.error("--transform is required unless --list is used")
 
+    if args.both_proportion is not None and args.transform != "both":
+        parser.error("--both-proportion only applies to --transform both")
+
+    proportion = 50 if args.both_proportion is None else args.both_proportion
+
+    if not 0 <= proportion <= 100:
+        parser.error("--both-proportion must be between 0 and 100")
+
     record = select_record(records, args.email)
     name_forms = load_name_forms(repo_root / "data/raw/identity.json")
 
-    internal_label = "blocked" if args.transform == "blocked" else "hidden"
-    all_rendered = render_variants(record["body"], name_forms)
-    rendered = {internal_label: all_rendered[internal_label]}
+    if args.transform == "blocked":
+        internal_label = "blocked"
+        html = render_variant(record["body"], name_forms, internal_label, record)
+        rendered = {internal_label: html}
+    elif args.transform == "whitespace":
+        internal_label = "hidden"
+        html = render_variant(record["body"], name_forms, internal_label, record)
+        rendered = {internal_label: html}
+    else:
+        internal_label = "both"
+        candidate_dir = repo_root / "prototyping" / "approval"
+
+        while True:
+            html = render_variant(
+                record["body"],
+                name_forms,
+                internal_label,
+                record,
+                proportion,
+            )
+
+            if approve_both_render(html, candidate_dir):
+                rendered = {internal_label: html}
+                break
 
     result = asyncio.run(
         export_images(
@@ -87,6 +155,7 @@ def main() -> None:
             record,
             repo_root / "output",
             repo_root / "data/processed/image-manifest.json",
+            both_proportion=proportion if internal_label == "both" else None,
         )
     )
 
@@ -107,6 +176,8 @@ def main() -> None:
             entry["existing_output_file"],
             f"html={entry['html_file']}",
         )
+
+    print(f"index: {repo_root / 'output' / 'INDEX.md'}")
 
 
 if __name__ == "__main__":
