@@ -27,7 +27,7 @@ The salutation is treated as the project's structural anchor. A paragraph contai
 
 The primary focus of this project is transforming/processing the the body text, obscuring private information, and maintaining the overall structure of an email/letter. It is important that the overall shape of the message is preserved without exposing or calling out an organization or person. Balancing these concerns with creative opportunities for working with language is an interesting challenge.
 
-The valediction is, at the moment, the most unstable part of this structure. Some rejections have them, some don't, and the variety of forms they may take is extreme. Nonetheless, the searches for a sign-off of some sort (ex: "Best, [NAME]") to close the structure of the rejection.
+The valediction is, at the moment, the most unstable part of this structure. Some rejections have them, some don't, and the variety of forms they may take is extreme. Nonetheless, the software searches for a sign-off of some sort (ex: "Best, [NAME]") to close the structure of the rejection.
 
 ## commands
 
