@@ -151,6 +151,127 @@ def _write_manifest(entries: list[dict], manifest_path: Path) -> None:
     )
 
 
+def _markdown_cell(value: object) -> str:
+    return str(value).replace("|", r"\|")
+
+
+def _source_label(entry: dict) -> str:
+    subject = entry.get("subject")
+    if isinstance(subject, str) and subject.strip():
+        return subject.strip()
+
+    source_file = entry.get("source_file")
+    if isinstance(source_file, str) and source_file.strip():
+        return source_file.strip()
+
+    return "unknown"
+
+
+def _proportion_cell(entry: dict) -> str:
+    if entry.get("transformation") != "both":
+        return "—"
+
+    proportion = entry.get("both_proportion")
+    if isinstance(proportion, int):
+        return f"{proportion}%"
+
+    return "—"
+
+
+def _html_cell(entry: dict, output_dir: Path) -> str:
+    html_name = entry.get("html_file")
+    if isinstance(html_name, str) and (output_dir / html_name).is_file():
+        return f"`{_markdown_cell(html_name)}`"
+
+    return "missing"
+
+
+def _index_row(entry: dict, output_dir: Path, *, include_generated: bool) -> str:
+    cells = [
+        _markdown_cell(_source_label(entry)),
+        _markdown_cell(entry.get("transformation", "")),
+        _markdown_cell(_proportion_cell(entry)),
+        _markdown_cell(entry.get("format", "")),
+    ]
+
+    if include_generated:
+        cells.append(_markdown_cell(entry.get("run_stamp", "")))
+
+    output_name = entry.get("output_file", "")
+    cells.append(f"`{_markdown_cell(output_name)}`")
+    cells.append(_html_cell(entry, output_dir))
+
+    if include_generated:
+        cells.append("yes" if entry.get("selected") is True else "—")
+
+    return "| " + " | ".join(cells) + " |"
+
+
+def write_output_index(entries: list[dict], output_dir: Path) -> Path:
+    path = output_dir / "INDEX.md"
+
+    available = [
+        entry
+        for entry in entries
+        if isinstance(entry.get("output_file"), str)
+        and (output_dir / entry["output_file"]).is_file()
+    ]
+    available.sort(
+        key=lambda entry: (
+            _source_label(entry).casefold(),
+            str(entry.get("transformation", "")).casefold(),
+            {"post": 0, "story": 1}.get(str(entry.get("format", "")), 2),
+            str(entry.get("run_stamp", "")),
+        )
+    )
+
+    lines = [
+        "# Private output index",
+        "",
+        (
+            "Do not publish this file or the HTML files. "
+            "Only approved PNGs are safe to publish."
+        ),
+        "",
+        "## Current final pick",
+        "",
+    ]
+
+    selected = [entry for entry in available if entry.get("selected") is True]
+
+    if selected:
+        lines.extend(
+            [
+                "| Source | Transform | Proportion | Format | PNG | Private HTML |",
+                "|---|---|---|---|---|---|",
+            ]
+        )
+        lines.extend(
+            _index_row(entry, output_dir, include_generated=False) for entry in selected
+        )
+    else:
+        lines.append("_No final pick marked._")
+
+    lines.extend(
+        [
+            "",
+            "## All outputs",
+            "",
+            (
+                "| Source | Transform | Proportion | Format | Generated | PNG | "
+                "Private HTML | Selected |"
+            ),
+            "|---|---|---|---|---|---|---|---|",
+        ]
+    )
+    lines.extend(
+        _index_row(entry, output_dir, include_generated=True) for entry in available
+    )
+
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    return path
+
+
 def _entry_key(entry: dict) -> tuple[str, str, str, str] | None:
     try:
         return (
@@ -188,6 +309,8 @@ def _manifest_entry(
     content_hash: str,
     stamp: str,
     generated_at: str,
+    both_proportion: int | None = None,
+    selected: bool = False,
 ) -> dict:
     width, height = canvas
 
@@ -200,6 +323,8 @@ def _manifest_entry(
         "from": record["from"],
         "to": record["to"],
         "transformation": label,
+        "both_proportion": both_proportion,
+        "selected": selected,
         "format": format_name,
         "canvas": {"width": width, "height": height},
         "html_file": html_path.name,
@@ -215,6 +340,7 @@ async def export_images(
     record: dict[str, str],
     output_dir: Path,
     manifest_path: Path,
+    both_proportion: int | None = None,
 ) -> ExportResult:
     now = datetime.now(UTC)
     stamp = now.strftime("%Y%m%dT%H%M%S")
@@ -313,6 +439,7 @@ async def export_images(
                     content_hash,
                     orphan_stamp,
                     adopted_at,
+                    both_proportion,
                 )
                 new_entries.append(entry)
                 known[key] = entry
@@ -379,6 +506,7 @@ async def export_images(
                     content_hash,
                     stamp,
                     generated_at,
+                    both_proportion,
                 )
                 new_entries.append(entry)
                 created.append(entry)
@@ -389,6 +517,8 @@ async def export_images(
     kept_entries = [
         entry for entry in manifest_entries if _entry_key(entry) not in replaced_keys
     ]
-    _write_manifest(kept_entries + new_entries, manifest_path)
+    final_entries = kept_entries + new_entries
+    _write_manifest(final_entries, manifest_path)
+    write_output_index(final_entries, output_dir)
 
     return ExportResult(created=created, skipped=skipped)
