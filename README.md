@@ -56,4 +56,4 @@ The `both` transform opens a local candidate HTML and asks for approval. Answeri
 
 ## example
 
-![Blocked rejection email, post format](assets/email-blocked-post-example.png)
+![Mixed blocked and invisible rejection email, post format](assets/email-both-post-example.png)
